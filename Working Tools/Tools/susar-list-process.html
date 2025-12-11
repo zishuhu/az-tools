@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>广东省人民医院SUSAR列表快速转换工具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c5aa0;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        /* 第一行布局 - 确保左右等高 */
+        .first-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+            align-items: stretch; /* 确保子元素等高 */
+        }
+        
+        /* 第二行布局 - 确保左右等高 */
+        .second-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+            align-items: stretch; /* 确保子元素等高 */
+        }
+        
+        .instructions-section {
+            background-color: #e8f4fd;
+            padding: 20px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            min-height: 280px; /* 设置最小高度确保对称 */
+        }
+        
+        .file-section {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 280px; /* 与左侧保持一致的最小高度 */
+        }
+        
+        .file-input-container {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 40px 30px; /* 增加垂直padding */
+            text-align: center;
+            background-color: #fafafa;
+            transition: border-color 0.3s;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .file-input-container:hover {
+            border-color: #2c5aa0;
+        }
+        .file-input-container.dragover {
+            border-color: #2c5aa0;
+            background-color: #e8f4fd;
+        }
+        input[type="file"] {
+            display: none;
+        }
+        .file-label {
+            display: inline-block;
+            background-color: #2c5aa0;
+            color: white;
+            padding: 15px 35px; /* 增加按钮大小 */
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        .file-label:hover {
+            background-color: #1e3d6f;
+        }
+        
+        .columns-display {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            min-height: 450px; /* 增加高度以匹配右侧 */
+        }
+        
+        .columns-table-container {
+            max-height: 350px; /* 增加表格高度 */
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-top: 15px;
+            flex-grow: 1;
+        }
+        
+        .columns-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        
+        .columns-table th, .columns-table td {
+            border: 1px solid #ddd;
+            padding: 10px 8px; /* 增加行高 */
+            text-align: left;
+        }
+        
+        .columns-table th {
+            background-color: #2c5aa0;
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            font-weight: bold;
+        }
+        
+        .columns-table tbody tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        .columns-table tbody tr:hover {
+            background-color: #e8f4fd;
+        }
+        
+        .drug-info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 5px;
+            padding: 12px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .mapping-section {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            min-height: 450px; /* 与左侧保持一致的最小高度 */
+        }
+        
+        .mapping-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin: 15px 0;
+            flex-grow: 1;
+        }
+        .mapping-item {
+            background-color: white;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            transition: box-shadow 0.2s;
+        }
+        .mapping-item:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .mapping-item label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #2c5aa0;
+        }
+        .mapping-item select {
+            width: 100%;
+            padding: 10px 8px; /* 增加选择框高度 */
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+        .mapping-item select:focus {
+            border-color: #2c5aa0;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(44, 90, 160, 0.2);
+        }
+        .column-preview {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            padding: 8px;
+            margin-top: 8px;
+            max-height: 80px;
+            overflow-y: auto;
+            font-size: 11px;
+            color: #666;
+            line-height: 1.4;
+        }
+        
+        button {
+            background-color: #2c5aa0;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        button:hover {
+            background-color: #1e3d6f;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .success-btn {
+            background-color: #28a745;
+        }
+        .success-btn:hover {
+            background-color: #218838;
+        }
+        
+        .preview-section {
+            margin-top: 30px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 12px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            word-wrap: break-word;
+            max-width: 200px;
+        }
+        th {
+            background-color: #2c5aa0;
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .table-container {
+            max-height: 500px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        .status {
+            padding: 12px 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            font-weight: 500;
+        }
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background-color: #cce7ff;
+            color: #004085;
+            border: 1px solid #b3d7ff;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 30px;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #2c5aa0;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .section-hidden {
+            display: none;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 1200px) {
+            .first-row, .second-row {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            .instructions-section, .file-section, .columns-display, .mapping-section {
+                min-height: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>广东省人民医院SUSAR列表快速转换工具 (Designed by Xuanqi Huang)</h1>
+        
+        <!-- 第一行：使用说明 + 文件选择 -->
+        <div class="first-row">
+            <div class="instructions-section">
+                <h3 style="margin-top: 0; color: #2c5aa0;">使用说明</h3>
+                <ol style="margin: 15px 0; padding-left: 20px; line-height: 1.6;">
+                    <li>选择Excel文件</li>
+                    <li>系统从第4行识别列名，从第2行提取研究药物信息</li>
+                    <li>手动选择对应的列</li>
+                    <li>预览转换结果并下载</li>
+                </ol>
+                
+                <h4 style="color: #2c5aa0; margin-bottom: 10px; margin-top: 20px;">注意</h4>
+                <ul style="margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.5; flex-grow: 1;">
+                    <li style="margin-bottom: 8px;">系统会自动从第4行读取列标题，从第2行提取"Investigational Drug:"后的药物名称</li>
+                    <li style="margin-bottom: 8px;"><strong>致死判断规则：</strong>只有当不良反应描述中包含"死亡"时，才会判定为"是"，其他情况均为"否"</li>
+                    <li style="margin-bottom: 8px;">支持.xlsx和.xls格式的Excel文件</li>
+                    <li style="margin-bottom: 0;">下载文件将命名为：SUSAR转换结果_原文件名</li>
+                </ul>
+            </div>
+            
+            <div class="file-section">
+                <div class="file-input-container" id="fileDropZone">
+                    <input type="file" id="excelFile" accept=".xlsx,.xls" />
+                    <label for="excelFile" class="file-label">选择Excel文件</label>
+                    <p style="margin: 20px 0 10px 0; font-size: 16px; color: #666;">或将Excel文件拖拽到此处</p>
+                    <p id="fileName" style="margin-top: 15px; font-weight: bold; color: #2c5aa0; font-size: 14px;"></p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p style="font-size: 16px; color: #2c5aa0;">正在处理文件，请稍候...</p>
+        </div>
+        
+        <div id="status"></div>
+        
+        <!-- 第二行：列标题显示 + 列选择 -->
+        <div class="second-row section-hidden" id="secondRow">
+            <div class="columns-display">
+                <h3 style="margin-top: 0; color: #2c5aa0; margin-bottom: 15px;">提取到的列标题</h3>
+                
+                <!-- 研究药物信息 -->
+                <div class="drug-info" id="drugInfoDisplay">
+                    <strong>检测到的研究药物：</strong><span id="drugName"></span>
+                </div>
+                
+                <!-- 列标题表格 -->
+                <div class="columns-table-container">
+                    <table class="columns-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 80px;">列号</th>
+                                <th>列标题</th>
+                            </tr>
+                        </thead>
+                        <tbody id="columnsTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="mapping-section">
+                <h3 style="margin-top: 0; color: #2c5aa0; margin-bottom: 15px;">请选择对应的列</h3>
+                
+                <div class="mapping-grid">
+                    <div class="mapping-item">
+                        <label for="mfrSelect">报告编号（事件编号）：</label>
+                        <select id="mfrSelect">
+                            <option value="">请选择列...</option>
+                        </select>
+                        <div class="column-preview" id="mfrPreview"></div>
+                    </div>
+                    
+                    <div class="mapping-item">
+                        <label for="reactionSelect">SAE名称（不良反应描述）：</label>
+                        <select id="reactionSelect">
+                            <option value="">请选择列...</option>
+                        </select>
+                        <div class="column-preview" id="reactionPreview"></div>
+                    </div>
+                    
+                    <div class="mapping-item">
+                        <label for="reportDateSelect">报告时间（SAE首次报告日期）：</label>
+                        <select id="reportDateSelect">
+                            <option value="">请选择列...</option>
+                        </select>
+                        <div class="column-preview" id="reportDatePreview"></div>
+                    </div>
+                    
+                    <div class="mapping-item">
+                        <label for="onsetDateSelect">严重事件发生时间（不良反应发生日期）：</label>
+                        <select id="onsetDateSelect">
+                            <option value="">请选择列...</option>
+                        </select>
+                        <div class="column-preview" id="onsetDatePreview"></div>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 20px; padding-top: 15px; border-top: 1px solid #dee2e6;">
+                    <button onclick="processMapping()">开始转换</button>
+                    <button onclick="autoMapping()">自动匹配</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 预览结果区域 -->
+        <div class="preview-section section-hidden" id="previewSection">
+            <h3 style="color: #2c5aa0; margin-bottom: 15px;">转换结果预览</h3>
+            <p id="recordCount" style="font-size: 16px; font-weight: 500;"></p>
+            <div class="table-container" id="previewTable"></div>
+            <div style="text-align: center; margin-top: 25px; padding-top: 20px; border-top: 1px solid #dee2e6;">
+                <button id="downloadBtn" class="success-btn" onclick="downloadExcel()">下载转换后的Excel文件</button>
+                <button onclick="reset()">重新选择文件</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入SheetJS库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <script>
+        let excelData = null;
+        let convertedData = null;
+        let headers = [];
+        let rows = [];
+        let drugName = '';
+        let originalFileName = ''; // 存储原始文件名
+
+        // 文件拖拽功能
+        const fileDropZone = document.getElementById('fileDropZone');
+        const fileInput = document.getElementById('excelFile');
+
+        fileDropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileDropZone.classList.add('dragover');
+        });
+
+        fileDropZone.addEventListener('dragleave', () => {
+            fileDropZone.classList.remove('dragover');
+        });
+
+        fileDropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileDropZone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            if (!file.name.match(/\.(xlsx|xls)$/)) {
+                showStatus('请选择Excel文件（.xlsx或.xls格式）', 'error');
+                return;
+            }
+
+            // 保存原始文件名（去掉扩展名）
+            originalFileName = file.name.replace(/\.(xlsx|xls)$/i, '');
+
+            document.getElementById('fileName').textContent = `已选择文件: ${file.name}`;
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('secondRow').classList.add('section-hidden');
+            document.getElementById('previewSection').classList.add('section-hidden');
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    processExcelData(e.target.result);
+                } catch (error) {
+                    showStatus('文件读取失败，请检查文件格式是否正确: ' + error.message, 'error');
+                    document.getElementById('loading').style.display = 'none';
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function processExcelData(data) {
+            try {
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+
+                if (jsonData.length < 5) {
+                    showStatus('Excel文件数据不足，至少需要5行数据（包含第4行列标题）', 'error');
+                    document.getElementById('loading').style.display = 'none';
+                    return;
+                }
+
+                // 从第2行提取研究药物信息
+                drugName = extractDrugName(jsonData);
+
+                // 从第4行获取列标题（索引为3）
+                headers = jsonData[3] || [];
+                
+                // 从第5行开始获取数据（索引从4开始）
+                rows = jsonData.slice(4);
+
+                excelData = { headers, rows, drugName };
+
+                // 显示研究药物信息和列标题
+                displayColumnsTable();
+                
+                // 创建选择下拉框
+                createColumnSelectors();
+                
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('secondRow').classList.remove('section-hidden');
+                showStatus(`成功读取Excel文件，从第4行识别到 ${headers.length} 列，从第5行开始有 ${rows.length} 行数据`, 'success');
+
+            } catch (error) {
+                showStatus('数据处理失败: ' + error.message, 'error');
+                document.getElementById('loading').style.display = 'none';
+                console.error('处理错误:', error);
+            }
+        }
+
+        function extractDrugName(jsonData) {
+            // 从第2行（索引1）查找"Investigational Drug:"
+            if (jsonData.length > 1) {
+                const row2 = jsonData[1] || [];
+                for (let cell of row2) {
+                    if (cell && typeof cell === 'string') {
+                        const match = cell.match(/Investigational Drug[:\s]*(.+)/i);
+                        if (match) {
+                            return match[1].trim();
+                        }
+                    }
+                }
+            }
+            return 'Osimertinib(AZD9291)'; // 默认值
+        }
+
+        function displayColumnsTable() {
+            // 显示研究药物信息
+            document.getElementById('drugName').textContent = drugName;
+            
+            // 显示列标题表格
+            const tbody = document.getElementById('columnsTableBody');
+            tbody.innerHTML = '';
+            
+            headers.forEach((header, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td style="text-align: center; font-weight: bold; color: #2c5aa0;">${index + 1}</td>
+                    <td style="font-weight: 500;">${header || '(空列)'}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function createColumnSelectors() {
+            const selectors = ['mfrSelect', 'reactionSelect', 'reportDateSelect', 'onsetDateSelect'];
+            
+            selectors.forEach(selectorId => {
+                const select = document.getElementById(selectorId);
+                select.innerHTML = '<option value="">请选择列...</option>';
+                
+                headers.forEach((header, index) => {
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.textContent = `第${index + 1}列: ${header || '(空列)'}`;
+                    select.appendChild(option);
+                });
+                
+                // 添加变化事件监听器
+                select.addEventListener('change', function() {
+                    updatePreview(selectorId, this.value);
+                });
+            });
+        }
+
+        function updatePreview(selectorId, columnIndex) {
+            if (columnIndex === '') {
+                const previewId = selectorId.replace('Select', 'Preview');
+                const previewDiv = document.getElementById(previewId);
+                previewDiv.textContent = '';
+                return;
+            }
+            
+            const previewId = selectorId.replace('Select', 'Preview');
+            const previewDiv = document.getElementById(previewId);
+            
+            // 显示该列的前4个数据作为预览
+            let previewText = '预览数据：\n';
+            for (let i = 0; i < Math.min(4, rows.length); i++) {
+                const cellValue = rows[i][columnIndex] || '(空)';
+                previewText += `${i + 1}. ${cellValue}\n`;
+            }
+            
+            previewDiv.textContent = previewText;
+        }
+
+        function autoMapping() {
+            // 自动匹配常见的列名
+            const autoMappings = {
+                mfrSelect: ['事件编号', 'MFR Control No', 'Control No', 'Report No'],
+                reactionSelect: ['不良反应描述', 'Describe Reaction', 'Reaction', '医学术语'],
+                reportDateSelect: ['SAE首次报告日期', 'Date of SAE first report', 'Report Date', '报告日期'],
+                onsetDateSelect: ['不良反应发生日期', 'Reaction Onset Date', 'Onset Date', '发生日期']
+            };
+
+            Object.keys(autoMappings).forEach(selectorId => {
+                const select = document.getElementById(selectorId);
+                const keywords = autoMappings[selectorId];
+                
+                for (let i = 0; i < headers.length; i++) {
+                    const header = String(headers[i] || '').toLowerCase();
+                    for (let keyword of keywords) {
+                        if (header.includes(keyword.toLowerCase())) {
+                            select.value = i;
+                            updatePreview(selectorId, i);
+                            break;
+                        }
+                    }
+                    if (select.value !== '') break;
+                }
+            });
+
+            showStatus('自动匹配完成，请检查并调整选择', 'info');
+        }
+
+        function processMapping() {
+            const mapping = {
+                mfrIndex: document.getElementById('mfrSelect').value,
+                reactionIndex: document.getElementById('reactionSelect').value,
+                reportDateIndex: document.getElementById('reportDateSelect').value,
+                onsetDateIndex: document.getElementById('onsetDateSelect').value
+            };
+
+            // 检查必要字段
+            const requiredFields = ['mfrIndex', 'reactionIndex', 'reportDateIndex', 'onsetDateIndex'];
+            const missingFields = requiredFields.filter(field => !mapping[field]);
+            
+            if (missingFields.length > 0) {
+                showStatus('请选择所有必要字段', 'error');
+                return;
+            }
+
+            // 转换数据
+            convertedData = convertData(rows, mapping);
+            
+            // 显示预览
+            displayPreview(convertedData);
+            
+            document.getElementById('previewSection').classList.remove('section-hidden');
+            showStatus(`成功转换 ${convertedData.length} 条记录`, 'success');
+        }
+
+        function convertData(rows, mapping) {
+            const result = [];
+            
+            rows.forEach((row, rowIndex) => {
+                if (!row || row.length === 0) return;
+                
+                try {
+                    // 1. 报告编号
+                    const mfrNo = mapping.mfrIndex ? (row[mapping.mfrIndex] || '') : '';
+                    
+                    // 2. 研究药物名称：使用从第2行提取的药物名称
+                    const drug = drugName;
+                    
+                    // 3. 不良反应描述
+                    const reaction = mapping.reactionIndex ? (row[mapping.reactionIndex] || '') : '';
+                    
+                    // 4. 是否致死：只检查不良反应描述是否包含"死亡"
+                    let isFatal = '否';
+                    if (reaction && typeof reaction === 'string' && reaction.includes('死亡')) {
+                        isFatal = '是';
+                    }
+                    
+                    // 5. 报告时间
+                    const reportDate = mapping.reportDateIndex ? formatDate(row[mapping.reportDateIndex]) : '1900/01/01';
+                    
+                    // 6. 严重事件发生时间
+                    const onsetDate = mapping.onsetDateIndex ? formatDate(row[mapping.onsetDateIndex]) : '1900/01/01';
+                    
+                    result.push({
+                        '报告编号': mfrNo,
+                        '研究药物名称': drug,
+                        '是否致死': isFatal,
+                        '报告时间': reportDate,
+                        '严重事件发生时间': onsetDate,
+                        'SAE名称': reaction
+                    });
+                } catch (error) {
+                    console.error(`处理第${rowIndex + 1}行数据时出错:`, error);
+                }
+            });
+            
+            return result;
+        }
+
+        function formatDate(dateValue) {
+            if (!dateValue || dateValue === 'NA' || String(dateValue).includes('NA')) {
+                return '1900/01/01';
+            }
+            
+            const dateStr = String(dateValue);
+            
+            // 处理不完整日期（包含??）
+            if (dateStr.includes('??')) {
+                return '1900/01/01';
+            }
+            
+            try {
+                let date;
+                
+                // 处理Excel日期数字格式
+                if (!isNaN(dateValue) && dateValue > 25569) {
+                    date = new Date((dateValue - 25569) * 86400 * 1000);
+                } else {
+                    date = new Date(dateStr);
+                }
+                
+                if (isNaN(date.getTime())) {
+                    return '1900/01/01';
+                }
+                
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                
+                return `${year}/${month}/${day}`;
+            } catch (error) {
+                return '1900/01/01';
+            }
+        }
+
+        function displayPreview(data) {
+            if (data.length === 0) {
+                document.getElementById('previewTable').innerHTML = '<p>没有数据可显示</p>';
+                return;
+            }
+
+            const headers = Object.keys(data[0]);
+            let tableHTML = '<table><thead><tr>';
+            
+            headers.forEach(header => {
+                tableHTML += `<th>${header}</th>`;
+            });
+            tableHTML += '</tr></thead><tbody>';
+            
+            data.forEach(row => {
+                tableHTML += '<tr>';
+                headers.forEach(header => {
+                    const cellValue = row[header] || '';
+                    // 如果是"是否致死"列且值为"是"，则高亮显示
+                    if (header === '是否致死' && cellValue === '是') {
+                        tableHTML += `<td style="background-color: #f8d7da; font-weight: bold;" title="${cellValue}">${cellValue}</td>`;
+                    } else {
+                        tableHTML += `<td title="${cellValue}">${cellValue}</td>`;
+                    }
+                });
+                tableHTML += '</tr>';
+            });
+            
+            tableHTML += '</tbody></table>';
+            
+            document.getElementById('previewTable').innerHTML = tableHTML;
+            
+            // 统计致死和非致死的数量
+            const fatalCount = data.filter(row => row['是否致死'] === '是').length;
+            const nonFatalCount = data.length - fatalCount;
+            
+            document.getElementById('recordCount').innerHTML = `
+                共 ${data.length} 条记录 
+                <span style="color: #dc3545; font-weight: bold;">（致死: ${fatalCount}，非致死: ${nonFatalCount}）</span>
+            `;
+        }
+
+        function downloadExcel() {
+            if (!convertedData || convertedData.length === 0) {
+                showStatus('没有数据可下载', 'error');
+                return;
+            }
+
+            try {
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.json_to_sheet(convertedData);
+                
+                const colWidths = [
+                    { wch: 15 }, { wch: 25 }, { wch: 10 }, 
+                    { wch: 15 }, { wch: 20 }, { wch: 50 }
+                ];
+                ws['!cols'] = colWidths;
+                
+                XLSX.utils.book_append_sheet(wb, ws, 'SUSAR转换结果');
+                
+                // 生成文件名：SUSAR转换结果_原文件名.xlsx
+                const fileName = `SUSAR转换结果_${originalFileName}.xlsx`;
+                
+                XLSX.writeFile(wb, fileName);
+                showStatus(`文件下载成功！文件名：${fileName}`, 'success');
+            } catch (error) {
+                showStatus('文件下载失败: ' + error.message, 'error');
+            }
+        }
+
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    statusDiv.innerHTML = '';
+                }, 3000);
+            }
+        }
+
+        function reset() {
+            document.getElementById('excelFile').value = '';
+            document.getElementById('fileName').textContent = '';
+            document.getElementById('secondRow').classList.add('section-hidden');
+            document.getElementById('previewSection').classList.add('section-hidden');
+            document.getElementById('status').innerHTML = '';
+            excelData = null;
+            convertedData = null;
+            headers = [];
+            rows = [];
+            drugName = '';
+            originalFileName = ''; // 重置原始文件名
+        }
+    </script>
+</body>
+</html>

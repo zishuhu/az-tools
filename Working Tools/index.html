@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工具导航中心 - AstraZeneca</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 900px;
+            width: 100%;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .logo {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .card-grid {
+            display: grid;
+            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            padding: 30px;
+            text-decoration: none;
+            color: white;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            cursor: pointer;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .card-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        
+        .card-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .card-description {
+            font-size: 14px;
+            opacity: 0.9;
+            line-height: 1.5;
+        }
+        
+        .version-info {
+            background: #f5f5f5;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .version-info p {
+            color: #666;
+            font-size: 13px;
+            margin: 5px 0;
+        }
+        
+        .footer {
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px 20px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+            
+            .card-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🚀</div>
+            <h1>工具导航中心</h1>
+            <p class="subtitle">AstraZeneca 内部工具集</p>
+        </div>
+        
+        <div class="version-info">
+            <p><strong>版本:</strong> v1.0.0</p>
+            <p><strong>最后更新:</strong> 2025-12-11</p>
+        </div>
+        
+        <div class="card-grid">
+            <a href="tools/susar-pdf-merge.html" class="card" target="_blank" rel="noopener noreferrer">
+                <div class="card-icon">📄</div>
+                <div class="card-title">SUSAR PDF合并</div>
+                <div class="card-description">南方医外院SUSAR合并PDF递交工具</div>
+            </a>
+            
+            <a href="tools/susar-list-process.html" class="card" target="_blank" rel="noopener noreferrer">
+                <div class="card-icon">📊</div>
+                <div class="card-title">SUSAR列表处理</div>
+                <div class="card-description">广东省人民医院SUSAR列表处理工具</div>
+            </a>
+            
+            <a href="tools/sld-analyzer.html" class="card" target="_blank" rel="noopener noreferrer">
+                <div class="card-icon">🔍</div>
+                <div class="card-title">SLD Analyzer</div>
+                <div class="card-description">SLD分析工具（含时间筛选）v1.1</div>
+            </a>
+        </div>
+        
+        <div class="footer">
+            <p>© 2025 AstraZeneca | 工具导航中心</p>
+        </div>
+    </div>
+</body>
+</html>

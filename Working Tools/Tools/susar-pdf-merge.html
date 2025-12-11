@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>批量解压并合并 PDF（按压缩包名命名）</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --bg: #0f172a;
+    --panel: #111827;
+    --panel-2: #0b1220;
+    --accent: #22d3ee;      /* 青色 */
+    --accent-2: #60a5fa;    /* 蓝色 */
+    --text: #e5e7eb;
+    --muted: #9ca3af;
+    --success: #34d399;
+    --warning: #f59e0b;
+    --error: #f87171;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    margin: 0;
+    background: radial-gradient(1200px 800px at 20% 20%, #0b1220 0%, #0f172a 45%, #0b1220 100%);
+    color: var(--text);
+  }
+  .container {
+    max-width: 980px;
+    margin: 48px auto;
+    padding: 24px;
+    background: linear-gradient(180deg, rgba(17,24,39,0.85), rgba(11,18,32,0.85));
+    border: 1px solid rgba(96,165,250,0.2);
+    border-radius: 16px;
+    box-shadow:
+      0 20px 60px rgba(34,211,238,0.08),
+      inset 0 1px 0 rgba(34,211,238,0.15);
+    backdrop-filter: blur(6px);
+  }
+  header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+  .logo {
+    width: 42px; height: 42px;
+    border-radius: 10px;
+    background:
+      radial-gradient(12px 12px at 70% 30%, rgba(34,211,238,0.25), transparent 60%),
+      radial-gradient(14px 14px at 30% 70%, rgba(96,165,250,0.25), transparent 60%),
+      linear-gradient(135deg, rgba(34,211,238,0.35), rgba(96,165,250,0.35));
+    border: 1px solid rgba(34,211,238,0.35);
+    box-shadow: 0 8px 24px rgba(34,211,238,0.25);
+  }
+  h1 {
+    font-size: 20px;
+    margin: 0;
+    letter-spacing: 0.4px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .note {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.7;
+    padding: 12px 14px;
+    background: rgba(96,165,250,0.08);
+    border: 1px dashed rgba(96,165,250,0.25);
+    border-radius: 10px;
+    margin-bottom: 18px;
+  }
+  .panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 18px;
+  }
+  .card {
+    background: linear-gradient(180deg, rgba(15,23,42,0.9), rgba(11,18,32,0.9));
+    border: 1px solid rgba(34,211,238,0.18);
+    border-radius: 12px;
+    padding: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: 12px;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(34,211,238,0.25), rgba(96,165,250,0.25));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    pointer-events: none;
+  }
+  .row { margin: 10px 0; }
+
+  input[type=file] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid rgba(34,211,238,0.25);
+    border-radius: 10px;
+    background: rgba(17,24,39,0.7);
+    color: var(--text);
+    transition: border-color 0.2s ease;
+  }
+  input[type=file]:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(34,211,238,0.15);
+  }
+
+  .btn {
+    appearance: none;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-weight: 600;
+    color: #0b1220;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    box-shadow: 0 10px 24px rgba(34,211,238,0.25);
+    cursor: pointer;
+    transition: transform 0.08s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  }
+  .btn:hover { transform: translateY(-1px); filter: brightness(1.05); }
+  .btn:active { transform: translateY(0); filter: brightness(0.95); }
+  .btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+    box-shadow: none;
+  }
+
+  .status {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+
+  .log {
+    white-space: pre-wrap;
+    background: linear-gradient(180deg, rgba(11,18,32,0.95), rgba(15,23,42,0.95));
+    border: 1px solid rgba(34,211,238,0.2);
+    padding: 12px;
+    border-radius: 12px;
+    max-height: 46vh;
+    overflow: auto;
+  }
+  .log b { color: var(--accent); }
+  .tag {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    color: #0b1220;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+  .footer {
+    margin-top: 16px;
+    font-size: 12px;
+    color: var(--muted);
+    text-align: right;
+  }
+  @media (max-width: 800px) {
+    .panel { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo"></div>
+      <h1>批量解压并合并 PDF（按压缩包名命名）</h1>
+      <span class="tag">本地运行</span>
+    </header>
+
+    <div class="note">
+      - 选择本地 ZIP 压缩包文件，浏览器内解压并将其中的 PDF 合并为 1 个文件，再按“压缩包名”自动命名并下载。<br>
+      - 命名规则示例：包含“AZD2936”且包含“202506” → AZD2936-SUSAR个例详情(2025.06.01-2025.06.30).pdf；包含“CTLA-4”且包含“202507” → CTLA-4SUSAR个例详情(2025.07.01-2025.07.31).pdf。
+    </div>
+
+    <div class="panel">
+      <div class="card">
+        <div class="row">
+          选择压缩包（可多选 .zip）：
+          <input id="zipInput" type="file" multiple accept=".zip">
+          <div id="selInfo" class="status">已选择：0 个 ZIP</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="row">
+          合并排序方式：按 PDF 文件名升序
+        </div>
+        <div class="row">
+          <button id="startBtn" class="btn" disabled>开始解压并合并</button>
+        </div>
+        <div class="status">提示：合并结果将下载到浏览器默认下载目录。</div>
+      </div>
+    </div>
+
+    <div class="log" id="log"></div>
+    <div class="footer">Powered by JSZip &amp; PDF-lib · 浏览器内存中本地处理，不修改你磁盘上的原文件</div>
+  </div>
+
+  <!-- 依赖：JSZip（解压 ZIP）、PDF-lib（合并 PDF） -->
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+  <script>
+    (function() {
+      const zipInput = document.getElementById('zipInput');
+      const startBtn = document.getElementById('startBtn');
+      const logEl = document.getElementById('log');
+      const selInfo = document.getElementById('selInfo');
+
+      function log(msg, tone = 'normal') {
+        const ts = new Date().toLocaleTimeString();
+        let prefix = '';
+        if (tone === 'ok') prefix = '✅ ';
+        else if (tone === 'warn') prefix = '⚠️ ';
+        else if (tone === 'err') prefix = '❌ ';
+        logEl.textContent += `[${ts}] ${prefix}${msg}\n`;
+        logEl.scrollTop = logEl.scrollHeight;
+      }
+
+      // 生成月份范围文本：输入 20YYMM → 输出 "YYYY.MM.01-YYYY.MM.lastDay"
+      function monthRangeText(yyyymm) {
+        const m = /^20\d{2}(0[1-9]|1[0-2])$/.exec(yyyymm);
+        if (!m) return null;
+        const year = parseInt(yyyymm.slice(0, 4), 10);
+        const month = parseInt(yyyymm.slice(4, 6), 10);
+        const start = new Date(year, month - 1, 1);
+        const end = new Date(year, month, 0);
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${year}.${pad(month)}.01-${year}.${pad(month)}.${pad(end.getDate())}`;
+      }
+
+      // 根据压缩包名生成输出文件名（严格按规则）
+      function buildOutputNameFromZip(zipNameNoExt) {
+        const base = zipNameNoExt;
+
+        // 药名匹配
+        let drug = null;
+        if (/AZD2936/i.test(base)) { drug = 'AZD2936'; }
+        else if (/CTLA-4/i.test(base)) { drug = 'CTLA-4'; }
+
+        // 月份匹配：20YYMM（取第一个）
+        let yyyymm = null;
+        const m = base.match(/20\d{2}(0[1-9]|1[0-2])/);
+        if (m) yyyymm = m[0];
+
+        const monthText = yyyymm ? monthRangeText(yyyymm) : null;
+
+        if (drug && monthText) {
+          if (drug === 'AZD2936') {
+            return `${drug}-SUSAR个例详情(${monthText}).pdf`;
+          } else if (drug === 'CTLA-4') {
+            return `${drug}SUSAR个例详情(${monthText}).pdf`; // CTLA-4 不加连字符
+          } else {
+            // 其他药名（如扩展）默认加连字符
+            return `${drug}-SUSAR个例详情(${monthText}).pdf`;
+          }
+        } else if (monthText) {
+          return `${base}-SUSAR个例详情(${monthText}).pdf`;
+        } else {
+          return `${base}_merged.pdf`;
+        }
+      }
+
+      // 从 ZIP 读取 PDF：返回 {name, content(uint8array)} 数组（按文件名升序）
+      async function extractPdfsFromZip(file) {
+        const arrayBuf = await file.arrayBuffer();
+        const zip = await JSZip.loadAsync(arrayBuf);
+        const pdfEntries = [];
+
+        const entries = Object.values(zip.files);
+        for (const entry of entries) {
+          if (entry.dir) continue;
+          if (!/\.pdf$/i.test(entry.name)) continue;
+          try {
+            const content = await entry.async('uint8array');
+            pdfEntries.push({ name: entry.name, content });
+          } catch (e) {
+            log(`读取 ZIP 内文件失败，已跳过：${entry.name} | ${e.message}`, 'warn');
+          }
+        }
+
+        // 按仅文件名（不含路径）升序
+        pdfEntries.sort((a, b) => {
+          const an = a.name.split('/').pop();
+          const bn = b.name.split('/').pop();
+          return an.localeCompare(bn, 'zh-CN');
+        });
+
+        return pdfEntries;
+      }
+
+      // 合并 PDF（输入为若干 {name, content(uint8array)}）
+      async function mergePdfs(pdfs) {
+        const { PDFDocument } = PDFLib;
+        const outPdf = await PDFDocument.create();
+        for (let i = 0; i < pdfs.length; i++) {
+          const { name, content } = pdfs[i];
+          try {
+            const src = await PDFDocument.load(content, { ignoreEncryption: true });
+            const pageIndices = src.getPageIndices();
+            const pages = await outPdf.copyPages(src, pageIndices);
+            pages.forEach(p => outPdf.addPage(p));
+          } catch (e) {
+            log(`合并时跳过无法读取的 PDF：${name} | ${e.message}`, 'warn');
+          }
+        }
+        const outBytes = await outPdf.save();
+        return outBytes;
+      }
+
+      zipInput.addEventListener('change', () => {
+        const count = zipInput.files.length;
+        selInfo.textContent = `已选择：${count} 个 ZIP`;
+        startBtn.disabled = count === 0;
+        log(`已选择压缩包数量：${count}`);
+      });
+
+      startBtn.addEventListener('click', async () => {
+        const zips = Array.from(zipInput.files).filter(f => /\.zip$/i.test(f.name));
+        if (zips.length === 0) {
+          log('未选择 ZIP 文件。', 'warn');
+          return;
+        }
+
+        startBtn.disabled = true;
+        log('开始处理所有压缩包...');
+
+        for (let i = 0; i < zips.length; i++) {
+          const zipFile = zips[i];
+          const zipBase = zipFile.name.replace(/\.zip$/i, '');
+          log(`(${i+1}/${zips.length}) 处理压缩包：${zipFile.name}`);
+
+          try {
+            const pdfs = await extractPdfsFromZip(zipFile);
+            if (pdfs.length === 0) {
+              log(`压缩包内未找到 PDF：${zipFile.name}，已跳过。`, 'warn');
+              continue;
+            }
+
+            const outName = buildOutputNameFromZip(zipBase);
+            log(`命名识别：压缩包名 → 输出文件名：${outName}`, 'ok');
+            log(`待合并 PDF 数量：${pdfs.length}（按文件名升序）`);
+
+            const outBytes = await mergePdfs(pdfs);
+
+            // 触发下载
+            const blob = new Blob([outBytes], { type: 'application/pdf' });
+            const a = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            a.href = url;
+            a.download = outName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            log(`完成并下载：${outName}`, 'ok');
+          } catch (e) {
+            log(`处理失败：${zipFile.name} | ${e.message}`, 'err');
+          }
+        }
+
+        log('全部处理完成。');
+        startBtn.disabled = false;
+      });
+    })();
+  </script>
+</body>
+</html>
